@@ -21,17 +21,18 @@
              :h 150
              :content "# Head\n## lines\n### are cool"}]}))
 
-(defn highlight!
-  []
-  (.initHighlightingOnLoad js/hljs))
-(highlight!)
-
 (defcomponent note-view
   [note owner]
-  
+
+  (init-state
+   [_]
+   {:mounted false})
+
   (render
    [_]
    (let [{:keys [x y w h content]} note]
+     (when (om/get-state owner :mounted)
+       (js/setTimeout #(.highlightBlock js/hljs (om/get-node owner)) 0))
      (dom/div {:class "note"
 
                :style
@@ -40,9 +41,9 @@
 
                :dangerouslySetInnerHTML {:__html (js/marked content)}})))
 
-  (did-update
-   [_ _ _]
-   nil))
+  (did-mount
+   [_]
+   (om/set-state! owner :mounted true)))
 
 (defcomponent root-view
   [app owner]
