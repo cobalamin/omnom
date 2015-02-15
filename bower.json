@@ -1,0 +1,19 @@
+{
+  "name": "omnom",
+  "version": "0.1.0",
+  "authors": [
+    "Simon Welker <simon.welker@outlook.com>"
+  ],
+  "license": "MIT",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "marked": "~0.3.3"
+  }
+}
