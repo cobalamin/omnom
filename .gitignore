@@ -10,4 +10,5 @@ pom.xml.asc
 /resources/public/js
 /out
 /.repl
-system.properties
+/system.properties
+/lib
