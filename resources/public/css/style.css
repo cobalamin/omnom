@@ -4,8 +4,9 @@ h1 {
 
 .note {
     position: absolute;
-    box-shadow: 0 0 7px #ccc;
+    box-shadow: 0 0 7px #333;
     padding: 15px;
+    background-color: #fff;
 }
 .note :first-child {
     margin-top: 0;
