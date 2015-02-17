@@ -2,43 +2,50 @@
   (:require [om.core :as om :include-macros true]
             [om-tools.dom :as dom :include-macros true]
             [om-tools.core :refer-macros [defcomponent]]
-            [goog.dom :as gdom]))
+            [goog.dom :as gdom]
+            [ff-om-draggable.core :refer [draggable-item]]))
 
 (def app-state
   (atom
-   {:notes [{:x 100
-             :y 50
+   {:notes [{:position {:x 100
+                        :y 50}
              :w 200
              :content "# This is cool\nTite *tite* __tite__\n```js\nfunction add(a, b) {\n  return a + b;\n}\n```"}
-            {:x 200
-             :y 300
+            {:position {:x 200
+                        :y 300}
              :w 400
              :content "[Gooooogle](http://google.com)"}
-            {:x 500
-             :y 20
+            {:position {:x 500
+                        :y 20}
              :w 200
              :content "# Head\n## lines\n### are cool"}]}))
 
-(defn on-next-tick
+(defn req-anim-frame
   [fn]
-  (js/setTimeout fn 0)
-  fn)
+  (js/requestAnimationFrame fn))
 
 (defn highlight!
   [node]
-  (on-next-tick
+  (req-anim-frame
    #(let [pre-blocks (array-seq (gdom/getElementsByTagNameAndClass "pre" nil node))]
      (doall
       (map (fn [pre-block]
              (.highlightBlock js/hljs pre-block))
            pre-blocks)))))
 
+(defn state-style
+  [{:keys [dragging]}]
+  (when dragging
+    {:cursor "-webkit-grabbing"
+     :-webkit-user-select "none"}))
+
 (defcomponent note-view
   [note owner]
 
   (init-state
    [_]
-   {:mounted false})
+   {:mounted false
+    :dragging false})
 
   (did-mount
    [_]
@@ -46,15 +53,18 @@
 
   (render
    [_]
-   (let [{:keys [x y w h content]} note]
+   (let [{:keys [w h content]
+          {:keys [x y]} :position} note]
      (when (om/get-state owner :mounted)
        (highlight! (om/get-node owner)))
      (dom/div {:class "note"
-               :style {:left x :top y :width w}
+               :style (merge {:width w :top y :left x} (state-style (om/get-state owner)))
                :dangerouslySetInnerHTML {:__html (js/marked content)}
-               :on-click (fn []
-                           (om/transact! note :content
-                                         #(str % "\n```javascript\nfunction meta-random() {\n  return " (rand-int 2048) ";\n}\n```")))}))))
+               :on-mouse-down #(om/set-state! owner :dragging true)
+               :on-mouse-up #(om/set-state! owner :dragging false)}))))
+
+(def draggable-note-view
+  (draggable-item note-view [:position]))
 
 (defcomponent root-view
   [app owner]
@@ -62,7 +72,7 @@
   (render
    [_]
    (dom/div
-    (om/build-all note-view (:notes app)))))
+    (om/build-all draggable-note-view (:notes app)))))
 
 (defn main []
   (om/root

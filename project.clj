@@ -17,7 +17,8 @@
                  [com.cemerick/piggieback "0.1.3"]
                  [weasel "0.4.0-SNAPSHOT"]
                  [leiningen "2.5.0"]
-                 [prismatic/om-tools "0.3.3"]]
+                 [prismatic/om-tools "0.3.3"]
+                 [ff-om-draggable "0.0.18"]]
 
   :plugins [[lein-cljsbuild "1.0.3"]
             [lein-environ "1.0.0"]]
