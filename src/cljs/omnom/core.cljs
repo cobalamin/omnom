@@ -3,74 +3,60 @@
             [om-tools.dom :as dom :include-macros true]
             [om-tools.core :refer-macros [defcomponent]]
             [goog.dom :as gdom]
-            [ff-om-draggable.core :refer [draggable-item]]))
+            [simple-om-draggable.core :refer [draggable-item]]))
 
 (def app-state
   (atom
    {:notes [{:position {:x 100
                         :y 50}
              :w 200
-             :content "# This is cool\nTite *tite* __tite__\n```js\nfunction add(a, b) {\n  return a + b;\n}\n```"}
+             :content "# Notes!\nNice *nice* __nice__\n```js\nfunction add(a, b) {\n  return a + b;\n}\n```"}
             {:position {:x 200
                         :y 300}
              :w 400
-             :content "[Gooooogle](http://google.com)"}
+             :content "[membero conde!](https://github.com/clojure/core.logic/wiki/A-Core.logic-Primer)"}
             {:position {:x 500
                         :y 20}
              :w 200
-             :content "# Head\n## lines\n### are cool"}]}))
+             :content "# Head\n## lines\n### are *cool*"}]}))
 
-(defn req-anim-frame
-  [fn]
+(defn req-anim-frame [fn]
   (js/requestAnimationFrame fn))
 
-(defn highlight!
-  [node]
+(defn get-by-tag-name
+  ([tag-name] (get-by-tag-name tag-name nil))
+  ([tag-name node] (array-seq (gdom/getElementsByTagNameAndClass tag-name nil node))))
+
+(defn highlight! [node]
   (req-anim-frame
-   #(let [pre-blocks (array-seq (gdom/getElementsByTagNameAndClass "pre" nil node))]
+   #(let [pre-blocks (get-by-tag-name "pre" node)]
      (doall
       (map (fn [pre-block]
              (.highlightBlock js/hljs pre-block))
            pre-blocks)))))
 
-(defn state-style
-  [{:keys [dragging]}]
-  (when dragging
-    {:cursor "-webkit-grabbing"
-     :-webkit-user-select "none"}))
-
-(defcomponent note-view
-  [note owner]
-
-  (init-state
-   [_]
+(defcomponent note-view [note owner]
+  (init-state [_]
    {:mounted false
     :dragging false})
 
-  (did-mount
-   [_]
+  (did-mount [_]
    (om/set-state! owner :mounted true))
 
-  (render
-   [_]
+  (render [_]
    (let [{:keys [w h content]
           {:keys [x y]} :position} note]
      (when (om/get-state owner :mounted)
        (highlight! (om/get-node owner)))
      (dom/div {:class "note"
-               :style (merge {:width w :top y :left x} (state-style (om/get-state owner)))
-               :dangerouslySetInnerHTML {:__html (js/marked content)}
-               :on-mouse-down #(om/set-state! owner :dragging true)
-               :on-mouse-up #(om/set-state! owner :dragging false)}))))
+               :style {:width w}
+               :dangerouslySetInnerHTML {:__html (js/marked content)}}))))
 
 (def draggable-note-view
   (draggable-item note-view [:position]))
 
-(defcomponent root-view
-  [app owner]
-
-  (render
-   [_]
+(defcomponent root-view [app owner]
+  (render [_]
    (dom/div
     (om/build-all draggable-note-view (:notes app)))))
 
@@ -78,4 +64,8 @@
   (om/root
     root-view
     app-state
-    {:target (. js/document (getElementById "app"))}))
+    {:target (gdom/getElement "app")
+     :tx-listen
+       (fn [{:keys [old-value new-value]}]
+         (.log js/console (str old-value " -> " new-value)))}))
+

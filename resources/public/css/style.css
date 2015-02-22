@@ -1,9 +1,4 @@
-h1 {
-  text-decoration: underline;
-}
-
 .note {
-    position: absolute;
     box-shadow: 0 0 7px #333;
     padding: 15px;
     background-color: #fff;
